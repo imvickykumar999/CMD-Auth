@@ -40,7 +40,7 @@ CREATE TABLE "users" (
       
 
 def get_req():
-    # http://127.0.0.1:5000/delete_user/1
+    # http://127.0.0.1:5000/logout
     link = input('\nEnter link : ')
 
     req = requests.get(link)
@@ -49,13 +49,12 @@ def get_req():
 
 
 def post_req():
-    # http://127.0.0.1:5000/edit_user/1
+    # http://127.0.0.1:5000/login
     link = input('\nEnter link : ')
 
     payload = {
-        "uname": '2000', 
-        "contact": "America", 
-        "name": "1 Dollar"
+        "email": 'imvickykumar999@gmail.com', 
+        "upass": "*********", 
     }
 
     header = {
