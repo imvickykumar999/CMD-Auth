@@ -11,13 +11,15 @@ from functools import wraps
 import os, random, secrets
 import sqlite3 as sql
 
-try: os.mkdir('mysite/static')
+try: os.mkdir('static')
 except: pass
 
-try: os.mkdir('mysite/static/files')
+try: os.mkdir('static/files')
 except: pass
 
 app=Flask(__name__)
+app.app_context().push()
+
 secret_key = secrets.token_hex(16)
 app.config['SECRET_KEY'] = secret_key
 
@@ -33,7 +35,7 @@ def allowed_extensions(file_name):
 @app.route('/login',methods=['POST','GET'])
 def login():
     status=True
-    con=sql.connect("mysite/db_sample.db")
+    con=sql.connect("db_sample.db")
 
     if request.method=='POST':
         email=request.form["email"]
@@ -66,23 +68,23 @@ def is_logged_in(f):
 
 @app.route('/reg',methods=['POST','GET'])
 def reg():
-    error = 'Only ADMIN can make CRUD Operation.'
-    return render_template('404.html', error=error), 404
+    # error = 'Only ADMIN can make CRUD Operation.'
+    # return render_template('404.html', error=error), 404
 
-    # status=False
-    # con=sql.connect("mysite/db_sample.db")
+    status=False
+    con=sql.connect("db_sample.db")
 
-    # if request.method=='POST':
-    #     name=request.form["uname"]
-    #     email=request.form["email"]
-    #     pwd=request.form["upass"]
-    #     cur=con.cursor()
-    #     cur.execute("insert into users(UNAME,UPASS,EMAIL) values(?,?,?)",(name,pwd,email))
-    #     con.commit()
-    #     cur.close()
-    #     flash('Registration Successfully. Login Here...','success')
-    #     return redirect('login')
-    # return render_template("reg.html",status=status)
+    if request.method=='POST':
+        name=request.form["uname"]
+        email=request.form["email"]
+        pwd=request.form["upass"]
+        cur=con.cursor()
+        cur.execute("insert into users(UNAME,UPASS,EMAIL) values(?,?,?)",(name,pwd,email))
+        con.commit()
+        cur.close()
+        flash('Registration Successfully. Login Here...','success')
+        return redirect('login')
+    return render_template("reg.html",status=status)
 
 
 @app.route("/logout")
@@ -95,8 +97,7 @@ def logout():
 @app.route("/")
 @app.route("/index")
 def index():
-
-    con=sql.connect("mysite/db_web.db")
+    con=sql.connect("db_web.db")
     con.row_factory=sql.Row
     cur=con.cursor()
 
@@ -126,7 +127,7 @@ def add_user():
             new_filename = secure_filename(filename+str(random.randint(10000,99999))+"."+file_extension)
             file.save(os.path.join(app.root_path, UPLOAD_FOLDER, new_filename))
 
-        con=sql.connect("mysite/db_web.db")
+        con=sql.connect("db_web.db")
         cur=con.cursor()
 
         cur.execute("insert into users(UNAME,CONTACT,NAME,FILE) values (?,?,?,?)",(uname,contact,name,new_filename))
@@ -146,7 +147,7 @@ def edit_user(uid):
         contact=request.form['contact']
         name=request.form['name']
 
-        con=sql.connect("mysite/db_web.db")
+        con=sql.connect("db_web.db")
         cur=con.cursor()
 
         if 'file' not in request.files:
@@ -175,7 +176,7 @@ def edit_user(uid):
         flash('Currency Updated','success')
         return redirect(url_for("index"))
 
-    con=sql.connect("mysite/db_web.db")
+    con=sql.connect("db_web.db")
     con.row_factory=sql.Row
     cur=con.cursor()
 
@@ -187,12 +188,12 @@ def edit_user(uid):
 @app.route("/delete_user/<string:uid>",methods=['GET'])
 @is_logged_in
 def delete_user(uid):
-    con=sql.connect("mysite/db_web.db")
+    con=sql.connect("db_web.db")
 
     cur=con.cursor()
     data = cur.execute("select FILE from users where UID=?",(uid,)).fetchall()
 
-    data = f'mysite/static/files/{data[0][0]}'
+    data = f'static/files/{data[0][0]}'
     os.remove(data)
 
     cur.execute("delete from users where UID=?",(uid,))
